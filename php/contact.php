@@ -1,5 +1,12 @@
 <?php
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require 'PHPMailer-6.9.1/src/Exception.php';
+require 'PHPMailer-6.9.1/src/PHPMailer.php';
+require 'PHPMailer-6.9.1/src/SMTP.php';
+
     // Only process POST reqeusts.
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Get the form fields and remove whitespace.
@@ -33,15 +40,37 @@
         // Build the email headers.
         $email_headers = "From: $name <$email>";
 
-        // Send the email.
-        if (mail($recipient, $subject, $email_content, $email_headers)) {
+        // Send the email using PHPMailer
+        $mail = new PHPMailer(true);
+
+        try {
+            //Server settings
+            $mail->SMTPDebug = 0; // Enable verbose debug output
+            $mail->isSMTP(); // Send using SMTP
+            $mail->Host       = 'smtp.gmail.com'; // Set the SMTP server to send through
+            $mail->SMTPAuth   = true; // Enable SMTP authentication
+            $mail->Username   = 'farrelanka0403@gmail.com'; // SMTP username
+            $mail->Password   = 'aosw oztz ccqv sbqb'; // SMTP password (use app password for Gmail)
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption
+            $mail->Port       = 587; // TCP port to connect to
+
+            //Recipients
+            $mail->setFrom($email, $name);
+            $mail->addAddress($recipient); // Add a recipient
+
+            // Content
+            $mail->isHTML(false); // Set email format to plain text
+            $mail->Subject = $subject;
+            $mail->Body    = $email_content;
+
+            $mail->send();
             // Set a 200 (okay) response code.
             http_response_code(200);
             echo "Thank You! Your message has been sent.";
-        } else {
+        } catch (Exception $e) {
             // Set a 500 (internal server error) response code.
             http_response_code(500);
-            echo "Oops! Something went wrong and we couldn't send your message.";
+            echo "Oops! Something went wrong and we couldn't send your message. Mailer Error: {$mail->ErrorInfo}";
         }
 
     } else {
